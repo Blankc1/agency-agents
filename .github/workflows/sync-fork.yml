@@ -1,9 +1,9 @@
-name: 自动同步上游Fork
+name: 自动同步上游 agency-agents
 on:
-  # 定时执行：UTC时间 每天凌晨2点 → 北京时间上午10点
+  # 定时执行：UTC 每天凌晨2点 → 北京时间上午10点，每日同步一次
   schedule:
     - cron: '0 2 * * *'
-  # 网页上可以手动点按钮立即触发同步
+  # 支持网页手动点击触发同步
   workflow_dispatch:
 
 jobs:
@@ -15,20 +15,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 配置Git信息
+      - name: 配置Git信息与网络防超时
         run: |
-          git config --global user.name "github‑actions[bot]"
-          git config --global user.email "github‑actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # 优化网络稳定性，避免拉取中断报 exit code 129
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 60
 
-      - name: 添加上游源仓库地址
+      - name: 添加上游仓库并拉取最新代码
         run: |
-          # ========== 修改这里！！替换为原始仓库URL ==========
           git remote add upstream https://github.com/msitarzewski/agency-agents.git
           git fetch upstream
 
-      - name: 合并上游代码，推送到自己fork
+      - name: 合并上游代码并推送到自己的Fork
         run: |
-          # 修改main为你需要同步的分支，例如master/dev
           git checkout main
-          git merge upstream/main --no‑ff
+          git merge upstream/main --no-ff
           git push origin main
